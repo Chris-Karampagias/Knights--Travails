@@ -1,16 +1,16 @@
+import { Graph } from "./graph.mjs";
+
 function createBoard() {
   const board = [];
   for (let i = 1; i <= 8; i++) {
     let row = [];
     for (let j = 1; j <= 8; j++) {
-      row.push([i, j, false]);
+      row.push([i, j, false, 0]);
     }
     board.push(row);
   }
   return board;
 }
-const board = createBoard();
-console.log(board);
 function getAvailableMoves(pos) {
   let i, j;
   [i, j] = pos;
@@ -25,7 +25,7 @@ function getAvailableMoves(pos) {
     [i - 1, j + 2],
   ];
   moves = moves.filter(
-    (pos) => pos[0] <= 8 && pos[1] <= 8 && pos[0] >= 0 && pos[1] >= 0
+    (pos) => pos[0] <= 8 && pos[1] <= 8 && pos[0] > 0 && pos[1] > 0
   );
   return moves;
 }
@@ -45,14 +45,14 @@ function knightMoves(start, finish) {
   while (queue.length && finish[2] != true) {
     currentPos = queue.shift();
     totalMoves.push(currentPos);
-    const availableMoves = getAvailableMoves([
-      currentPos[0] + 1,
-      currentPos[1] + 1,
-    ]);
+    const availableMoves = getAvailableMoves([currentPos[0], currentPos[1]]);
     availableMoves.forEach((move) => {
       move = board[move[0] - 1][move[1] - 1];
       if (!move[2]) {
         move[2] = true;
+      }
+      if (move[0] == fi && move[1] == fj) {
+        totalMoves.push(move);
       }
       queue.push(move);
     });
@@ -60,4 +60,35 @@ function knightMoves(start, finish) {
   return totalMoves;
 }
 
-console.log(knightMoves([3, 3], [4, 3]));
+function createGraph() {
+  const graph = new Graph();
+  const board = createBoard();
+  const queue = [];
+  let currentPos = board[0][0];
+  queue.push(currentPos);
+  let i, j, v1, v2;
+  while (true) {
+    currentPos = queue.shift();
+    while (currentPos[2] == true) {
+      currentPos = queue.shift();
+      if (!queue.length) {
+        return graph;
+      }
+    }
+    currentPos[2] = true;
+    i = currentPos[0];
+    j = currentPos[1];
+    v1 = `${i}${j}`;
+    graph.addVertex(i, j);
+    const availableMoves = getAvailableMoves([i, j]);
+    availableMoves.forEach((move) => {
+      v2 = `${move[0]}${move[1]}`;
+      graph.addVertex(move[0], move[1]);
+      graph.addEdge(v1, v2);
+      move = board[move[0] - 1][move[1] - 1];
+      queue.push(move);
+    });
+  }
+}
+
+console.log(createGraph());
