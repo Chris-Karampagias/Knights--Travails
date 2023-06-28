@@ -31,33 +31,45 @@ function getAvailableMoves(pos) {
 }
 
 function knightMoves(start, finish) {
-  const board = createBoard();
-  const queue = [];
-  const totalMoves = [];
-  let si, sj, fi, fj;
-  [si, sj] = start;
-  start = board[si - 1][sj - 1];
-  [fi, fj] = finish;
-  finish = board[fi - 1][fj - 1];
-  start[2] = true;
-  queue.push(start);
-  let currentPos;
-  while (queue.length && finish[2] != true) {
-    currentPos = queue.shift();
-    totalMoves.push(currentPos);
-    const availableMoves = getAvailableMoves([currentPos[0], currentPos[1]]);
-    availableMoves.forEach((move) => {
-      move = board[move[0] - 1][move[1] - 1];
-      if (!move[2]) {
-        move[2] = true;
+  const graph = createGraph().adjacencyList;
+  const queue = [start],
+    visited = { [start]: true },
+    predecessor = {};
+  while (queue.length) {
+    let u = queue.shift(),
+      neighbours = graph[`${u[0]}${u[1]}`];
+    for (let i = 0; i < neighbours.length; i++) {
+      let ic = Number(neighbours[i][0]),
+        jc = Number(neighbours[i][1]),
+        v = [ic, jc];
+      if (visited[v]) {
+        continue;
       }
-      if (move[0] == fi && move[1] == fj) {
-        totalMoves.push(move);
+      visited[v] = true;
+      if (v[0] == finish[0] && v[1] == finish[1]) {
+        predecessor[v] = u;
+        const path = [v];
+        let flag = true;
+        while (flag) {
+          path.push(u);
+          u = predecessor[u];
+          if (u[0] == start[0] && u[1] == start[1]) {
+            path.push(u);
+            flag = false;
+          }
+        }
+        path.reverse();
+        console.log(
+          `You made it in ${path.length - 1} moves! Here's your path:`
+        );
+        for (let j = 0; j < path.length; j++) {
+          console.log(`[${path[j][0]},${path[j][1]}]`);
+        }
       }
-      queue.push(move);
-    });
+      predecessor[v] = u;
+      queue.push(v);
+    }
   }
-  return totalMoves;
 }
 
 function createGraph() {
@@ -91,4 +103,4 @@ function createGraph() {
   }
 }
 
-console.log(createGraph());
+knightMoves([1, 1], [8, 8]);
